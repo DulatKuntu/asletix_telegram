@@ -9,7 +9,7 @@ COPY ./ ./
 # build go app
 RUN go mod download
 RUN go build -o asletix_telegram ./cmd/main.go
-EXPOSE 88
+EXPOSE 8443
 
 
 CMD ["./asletix_telegram"]
