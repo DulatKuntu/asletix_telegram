@@ -61,12 +61,12 @@ func (h *Handler) Info(c *gin.Context) {
 }
 
 func (h *Handler) SelectedLanguage(chatID int64, c *gin.Context) {
-	data, err := h.services.UniqueWorkout()
+	data, err := h.services.SelectedLanguage()
 	if err != nil {
 		log.Print(err.Error())
 		return
 	}
-	img, err := h.services.PlotDayCount(data)
+	img, err := h.services.PlotLanguage(data)
 
 	if err != nil {
 		log.Print(err.Error())
@@ -76,16 +76,14 @@ func (h *Handler) SelectedLanguage(chatID int64, c *gin.Context) {
 	defer img.Close()
 	defer os.Remove(img.Name()) // clean up
 
-	lastDay, lastWeek, lastMonth, err := h.services.UniqueWorkoutDWM()
-
-	if err != nil {
-		log.Print(err.Error())
-		return
+	var mes strings.Builder
+	for _, item := range data {
+		mes.WriteString(item.Language)
+		mes.WriteString(": ")
+		mes.WriteByte(byte(item.Count))
+		mes.WriteByte('\n')
 	}
-
-	mes := "Month: " + strconv.Itoa(lastMonth) + "\nWeek: " + strconv.Itoa(lastWeek) + "\nDay: " + strconv.Itoa(lastDay)
-
-	if err = h.LSOFSinglePlotWithMessage(chatID, mes, img); err != nil {
+	if err = h.LSOFSinglePlotWithMessage(chatID, mes.String(), img); err != nil {
 		log.Print(err.Error())
 	}
 }
@@ -152,12 +150,12 @@ func (h *Handler) OpenAppCount(chatID int64, c *gin.Context) {
 
 func (h *Handler) RegistrationCount(chatID int64, c *gin.Context) {
 	log.Print("RegistrationCount")
-	data, total, err := h.services.Registration()
+	dataHome, dataGym, total, err := h.services.Registration()
 	if err != nil {
 		log.Print(err.Error())
 		return
 	}
-	img, err := h.services.PlotDayCount(data)
+	img, err := h.services.PlotRegistration(dataHome, dataGym)
 
 	if err != nil {
 		log.Print(err.Error())
@@ -168,15 +166,19 @@ func (h *Handler) RegistrationCount(chatID int64, c *gin.Context) {
 	defer img.Close()
 	defer os.Remove(img.Name()) // clean up
 
-	lastDay := data[len(data)-1].Count
+	lastDay := dataHome[len(dataHome)-1].Count
+	lastDay = lastDay + dataGym[len(dataGym)-1].Count
 	lastWeek := 0
 	lastMonth := 0
-	for i := 0; i < len(data); i++ {
-		lastMonth += data[i].Count
+	for i := 0; i < len(dataHome); i++ {
+		lastMonth += dataHome[i].Count
+		lastMonth += dataGym[i].Count
+
 	}
 
-	for i := len(data) - 1; i >= len(data)-7; i-- {
-		lastWeek += data[i].Count
+	for i := len(dataHome) - 1; i >= len(dataHome)-7; i-- {
+		lastWeek += dataHome[i].Count
+		lastWeek += dataGym[i].Count
 	}
 
 	mes := "Total: " + strconv.Itoa(int(total)) + "\nMonth: " + strconv.Itoa(lastMonth) + "\nWeek: " + strconv.Itoa(lastWeek) + "\nDay: " + strconv.Itoa(lastDay)

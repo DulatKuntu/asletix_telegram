@@ -76,6 +76,11 @@ type DayCount struct {
 	Time  time.Time `json:"time" bson:"time"`
 }
 
+type LanguageCount struct {
+	Count    int64  `json:"count" bson:"count"`
+	Language string `json:"language" bson:"language"`
+}
+
 type RefCount struct {
 	Count int    `json:"count" bson:"count"`
 	Name  string `json:"name" bson:"name"`

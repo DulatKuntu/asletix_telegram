@@ -8,12 +8,13 @@ import (
 
 type User interface {
 	Referal() ([]*model.RefCount, error)
-	RegistrationLastMonthByDays() ([]*model.DayCount, error)
+	RegistrationLastMonthByDays(location string) ([]*model.DayCount, error)
 	OpenAppLastMonthByDays() ([]*model.DayCount, error)
 	OpenAppLastDays(int) (int, error)
 	UniqueWorkoutLastMonthByDays() ([]*model.DayCount, error)
 	UniqueWorkoutLastDays(int) (int, error)
 	TotalCount() (int64, error)
+	SelectedLanguage() ([]*model.LanguageCount, error)
 }
 
 type Repository struct {

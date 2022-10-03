@@ -26,7 +26,24 @@ func (r *UserMongo) TotalCount() (int64, error) {
 	return col.CountDocuments(context.TODO(), bson.M{})
 }
 
-func (r *UserMongo) RegistrationLastMonthByDays() ([]*model.DayCount, error) {
+func (r *UserMongo) SelectedLanguage() ([]*model.LanguageCount, error) {
+	languages := []string{"de", "en", "es", "fr", "hi", "it", "pt", "ru"}
+	var data []*model.LanguageCount
+	for i := 0; i < len(languages); i++ {
+		col := r.db.Collection(collectionUser)
+		num, err := col.CountDocuments(
+			context.TODO(),
+			bson.M{"settings.language": languages[i]},
+		)
+		if err != nil {
+			return nil, err
+		}
+		data = append(data, &model.LanguageCount{Language: languages[i], Count: num})
+	}
+	return data, nil
+}
+
+func (r *UserMongo) RegistrationLastMonthByDays(location string) ([]*model.DayCount, error) {
 	//init the loc
 	loc, _ := time.LoadLocation("Asia/Almaty")
 
@@ -50,7 +67,7 @@ func (r *UserMongo) RegistrationLastMonthByDays() ([]*model.DayCount, error) {
 	cursor, err := col.Aggregate(
 		context.TODO(),
 		[]bson.M{
-			{"$match": bson.M{"userTimeData.registration": bson.M{"$gt": now.Add(-time.Duration(time.Hour * 30 * 24))}}},
+			{"$match": bson.M{"userTimeData.registration": bson.M{"$gt": now.Add(-time.Duration(time.Hour * 30 * 24))}, "parameters.trainingSettings.location": location}},
 			{"$group": bson.M{
 				"_id": bson.M{
 					"day":   bson.M{"$dayOfMonth": bson.M{"date": "$userTimeData.registration", "timezone": "Asia/Almaty"}},
